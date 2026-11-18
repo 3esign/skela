@@ -1,0 +1,10 @@
+{
+  "name": "Skela — hybrid field inspection",
+  "short_name": "Skela",
+  "description": "Site notes are structured and redacted on this device. Only an anonymised packet may reach the cloud.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f6f4ef",
+  "theme_color": "#16181d",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

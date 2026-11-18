@@ -1,0 +1,12 @@
+{
+  "name": "skela",
+  "version": "0.1.0",
+  "description": "Hybrid field inspection: confidential site notes are structured and redacted on-device, and only an anonymised packet reaches the cloud. Built on Firebase AI Logic hybrid inference.",
+  "type": "module",
+  "private": true,
+  "license": "Apache-2.0",
+  "scripts": {
+    "start": "node tools/serve.js",
+    "test": "node --test"
+  }
+}

@@ -1,0 +1,204 @@
+<!doctype html>
+<!--
+  Skela says one sentence: a site note is read and redacted on this device, and you can see
+  exactly what is allowed to cross to the cloud, and what it cost.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Skela — hybrid field inspection</title>
+  <meta name="description" content="Site notes are structured and redacted on this device. Only an anonymised packet may reach the cloud.">
+  <meta name="theme-color" content="#16181d">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip" href="#note">Skip to the field note</a>
+
+  <header class="top">
+    <div class="brand">
+      <img src="icon.svg" alt="" width="36" height="36">
+      <div>
+        <h1>Skela</h1>
+        <p>Site notes stay on this device. Only an anonymised packet may cross.</p>
+      </div>
+    </div>
+    <div class="status">
+      <span class="chip" id="chipNet"></span>
+      <span class="chip" id="chipDevice"></span>
+      <span class="chip" id="chipCloud"></span>
+      <label class="toggle"><input type="checkbox" id="airGap"> <span>Air-gap</span></label>
+      <button type="button" class="quiet" id="openSettings">Settings</button>
+    </div>
+  </header>
+
+  <p class="banner" id="banner" role="status" hidden></p>
+
+  <main class="zones" id="zones">
+    <section class="zone" aria-labelledby="hDevice">
+      <h2 id="hDevice"><span class="zone-mark device-mark" aria-hidden="true"></span>On this device</h2>
+
+      <div class="step">
+        <div class="step-head">
+          <h3><label for="note">1 · Field note</label></h3>
+          <div class="samples" id="samples" role="group" aria-label="Sample notes"></div>
+        </div>
+        <textarea id="note" rows="9" spellcheck="false" placeholder="Type or paste what you saw on site. Names, addresses, prices and ID numbers are welcome: they will not leave this device."></textarea>
+        <div class="row">
+          <label class="field grow" for="lexicon">Always hide these terms
+            <input id="lexicon" type="text" placeholder="project code names, client names, comma separated" autocomplete="off">
+          </label>
+          <button type="button" class="primary" id="inspect">Inspect</button>
+        </div>
+      </div>
+
+      <div class="step" id="stepRedacted" hidden>
+        <div class="step-head">
+          <h3>2 · Redacted here</h3>
+          <p class="meta" id="redactionMeta"></p>
+        </div>
+        <p class="redacted" id="redacted"></p>
+        <details class="vault">
+          <summary>Vault: what each placeholder stands for (kept on this device)</summary>
+          <table id="vaultTable"><thead><tr><th>Placeholder</th><th>Original</th><th>Kind</th><th>Found by</th></tr></thead><tbody></tbody></table>
+        </details>
+      </div>
+
+      <div class="step" id="stepFindings" hidden>
+        <div class="step-head">
+          <h3>3 · Findings</h3>
+          <p class="meta" id="findingsMeta"></p>
+        </div>
+        <ol class="findings" id="findings"></ol>
+      </div>
+
+      <div class="step" id="stepBrief" hidden>
+        <div class="step-head">
+          <h3>4 · Crew brief</h3>
+          <p class="meta" id="briefMeta"></p>
+        </div>
+        <p class="brief" id="brief"></p>
+      </div>
+    </section>
+
+    <div class="boundary" id="boundary" aria-hidden="true"><span id="boundaryLabel">browser boundary</span></div>
+
+    <section class="zone" aria-labelledby="hCloud">
+      <h2 id="hCloud"><span class="zone-mark cloud-mark" aria-hidden="true"></span>Beyond this device</h2>
+
+      <div class="step" id="stepRoute">
+        <div class="step-head">
+          <h3>Should this cross?</h3>
+          <p class="meta" id="routeMeta"></p>
+        </div>
+        <p class="verdict" id="verdict">Inspect a note first. The router then decides whether the device can handle it alone.</p>
+        <ul class="reasons" id="reasons"></ul>
+      </div>
+
+      <div class="step" id="stepPacket" hidden>
+        <div class="step-head">
+          <h3>The packet, exactly as it would be sent</h3>
+          <p class="meta" id="packetMeta"></p>
+        </div>
+        <pre class="packet" id="packet" tabindex="0"></pre>
+        <p class="guard" id="guard"></p>
+        <div class="row">
+          <button type="button" class="cross" id="send" disabled>Send for engineering review</button>
+          <button type="button" class="quiet" id="draft" hidden>Draft on device now</button>
+        </div>
+        <p class="meta" id="queueMeta"></p>
+      </div>
+
+      <div class="step" id="stepReview" hidden>
+        <div class="step-head">
+          <h3>Engineering review</h3>
+          <p class="meta" id="reviewMeta"></p>
+        </div>
+        <div class="review" id="review"></div>
+        <div class="row">
+          <label class="toggle"><input type="checkbox" id="rehydrate"> <span>Put the originals back (on this device only)</span></label>
+          <button type="button" class="quiet" id="export">Export report</button>
+        </div>
+      </div>
+
+      <details class="step log" id="stepLog" hidden>
+        <summary>Everything that has left this device (<span id="logCount">0</span>)</summary>
+        <ol id="log"></ol>
+      </details>
+    </section>
+  </main>
+
+  <footer class="hud" aria-label="Hybrid telemetry">
+    <div class="hud-head">
+      <h2>Hybrid telemetry</h2>
+      <p class="meta" id="hudNote"></p>
+      <button type="button" class="quiet" id="toggleLedger" aria-expanded="false" aria-controls="ledger">Ledger</button>
+    </div>
+    <div class="split" id="split" role="img" aria-label="Share of model tokens on device and in the cloud">
+      <span class="split-device" id="splitDevice"></span><span class="split-cloud" id="splitCloud"></span>
+    </div>
+    <dl class="meters" id="meters"></dl>
+    <div class="ledger" id="ledger" hidden>
+      <table>
+        <thead><tr><th>Time</th><th>Task</th><th>Ran on</th><th>Latency</th><th>Tokens in</th><th>Tokens out</th><th>Network</th></tr></thead>
+        <tbody id="ledgerRows"></tbody>
+      </table>
+    </div>
+  </footer>
+
+  <dialog id="settings" aria-labelledby="hSettings">
+    <form method="dialog" id="settingsForm">
+      <h2 id="hSettings">Settings</h2>
+      <p class="meta">Kept in this browser only. Nothing here is sent anywhere except to Firebase when you connect.</p>
+
+      <label class="field" for="fbConfig">Firebase configuration
+        <textarea id="fbConfig" rows="6" spellcheck="false" placeholder='Paste the firebaseConfig object from the Firebase console: { apiKey: "...", projectId: "...", appId: "..." }'></textarea>
+      </label>
+      <div class="row">
+        <label class="field" for="acProvider">App Check
+          <select id="acProvider">
+            <option value="debug">Debug token (localhost)</option>
+            <option value="recaptcha-enterprise">reCAPTCHA Enterprise</option>
+            <option value="recaptcha-v3">reCAPTCHA v3</option>
+          </select>
+        </label>
+        <label class="field grow" for="acKey"><span id="acKeyLabel">Debug token</span>
+          <input id="acKey" type="text" autocomplete="off" placeholder="leave empty to have one printed in the console">
+        </label>
+      </div>
+      <div class="row">
+        <label class="field grow" for="cloudModel">Cloud model
+          <input id="cloudModel" type="text" autocomplete="off" placeholder="SDK default: gemini-3.5-flash-lite">
+        </label>
+        <label class="field" for="threshold">Escalation threshold
+          <input id="threshold" type="number" min="1" max="20" step="1">
+        </label>
+      </div>
+      <div class="row">
+        <label class="field" for="priceIn">Cloud price in, $ / 1M tokens
+          <input id="priceIn" type="number" min="0" step="0.01">
+        </label>
+        <label class="field" for="priceOut">Cloud price out, $ / 1M tokens
+          <input id="priceOut" type="number" min="0" step="0.01">
+        </label>
+      </div>
+      <fieldset>
+        <legend>Rehearsal</legend>
+        <label class="toggle"><input type="checkbox" id="dryRun"> <span>Dry run: canned answers, no model and no network call</span></label>
+        <label class="toggle"><input type="checkbox" id="dryDevice"> <span>In the dry run, pretend an on-device model is present</span></label>
+      </fieldset>
+      <p class="error" id="settingsError" role="alert" hidden></p>
+      <div class="row end">
+        <button type="button" class="quiet" id="forget">Forget everything</button>
+        <button type="button" class="quiet" id="cancelSettings">Cancel</button>
+        <button type="submit" class="primary" id="saveSettings">Save and connect</button>
+      </div>
+    </form>
+  </dialog>
+
+  <noscript><p class="banner">Skela needs JavaScript: all of its work happens in this browser.</p></noscript>
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>
