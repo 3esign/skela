@@ -177,7 +177,7 @@ try {
   await inspect();
   const countC = cloud.generate.length;
   await js("document.getElementById('send').click(); return 1");
-  await until("!document.getElementById('stepReview').hidden && !document.getElementById('send').textContent.includes('Sending') && document.getElementById('stepReview').textContent.length > 60", 'failure handled', 300000);
+  await until("!document.getElementById('stepReview').hidden && !document.getElementById('send').textContent.includes('Sending') && document.getElementById('stepReview').textContent.length > 60", 'failure handled', 1200000);
   check('C the cloud was tried', cloud.generate.length > countC);
   const metaC = await text('#reviewMeta');
   const bodyC = await text('#stepReview');

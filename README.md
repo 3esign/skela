@@ -82,7 +82,7 @@ Open `http://localhost:5173` in Chrome on desktop. Without a Firebase project th
 
 1. In the Firebase console create a project, open **AI Services > AI Logic**, choose **Get started** and select the Gemini Developer API. Register a web app and copy its `firebaseConfig`.
 2. In Skela open **Settings**, paste the configuration, choose **Debug token** for App Check, save. The browser console prints a debug token; register it in the Firebase console under **Security > App Check > Apps > Manage debug tokens**.
-3. For the on-device model use a current desktop Chrome and turn on **On-device AI** in `chrome://settings/ai` (it is off by default; verified on Chrome 160). The header shows the model state and offers the download.
+3. For the on-device model use a current desktop Chrome and turn on **On-device AI** in `chrome://settings/ai` (it is off by default), then enable `chrome://flags/#gemma4-for-built-in-ai` and restart so that Chrome runs Gemini Nano 4 (verified on Chrome 160; without the flag Chrome 160 runs the older Nano model). The header shows the model state and offers the download.
 
 For a hosted copy, fill `config.js` at deploy time (see `config.example.js`) with a reCAPTCHA site key for App Check. The repository keeps `config.js` empty on purpose, and no debug token belongs in any file.
 
@@ -125,7 +125,7 @@ The automated tests do not make a live Gemini call. Live behaviour of the on-dev
 
 ## Limits
 
-- On-device inference needs a current desktop Chrome with On-device AI turned on and the model downloaded (about 4.3 GB). Measured through the interface on a mid-range GPU (RX 580): 20–45 s for the first call after opening, then 6–20 s to structure a note and 7–12 s for a brief. A full review drafted on the device takes about 150 s. On other browsers and on phones Skela uses the rule engine locally and the cloud for redacted work.
+- On-device inference needs a current desktop Chrome with On-device AI turned on and the model downloaded (about 2.5 GB for Gemini Nano 4). Measured through the interface on an old mid-range PC (RX 580, 8 GB RAM) with Gemini Nano 4: the first model load after installing took over 5 minutes and the first pass was slow (about 150 s to structure a note, 50 s for a brief); once warm, structuring a note and writing a brief averaged 5.6 s per call. A full review drafted on the device takes about 150 s. Skela shows the measured latency of every call. On other browsers and on phones Skela uses the rule engine locally and the cloud for redacted work.
 - The on-device model is configured for English. Serbian notes are redacted and read by the rule engine, which knows Serbian site vocabulary.
 - Redaction is pattern-based with a model assist. It is strict about formats it knows and can miss a name that carries no title, label or company suffix and is not on your list. The vault table shows everything that was caught, so a miss is visible before sending.
 - Severity thresholds are triage hints with their source stated next to each finding (EN 1992-1-1 Table 7.1N for crack width; US OSHA 29 CFR 1926.501 and 1926.652 for height and depth). They are not a compliance verdict. The cloud review is a draft that an engineer must verify.
