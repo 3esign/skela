@@ -133,4 +133,5 @@ test('placeholders a model made up are told apart from vaulted ones', () => {
   assert.deepEqual(strayPlaceholders(`Tell ${real} and [REDACTED].`, red.vault), [], 'vaulted tokens are not stray');
   assert.deepEqual(strayPlaceholders(`Concerns at [SITE_NAME]; call [PERSON_9] and ${real}. [SITE_NAME] again.`, red.vault), ['[SITE_NAME]', '[PERSON_9]']);
   assert.deepEqual(strayPlaceholders('Slab S3 [see photo] is cracked.', red.vault), [], 'ordinary bracketed prose is left alone');
+  assert.deepEqual(strayPlaceholders('Fix the crack in [F3 Slab S3] and the rail on [F1 North scaffold].', red.vault), [], 'a bracketed finding reference ending in capitals is not a placeholder');
 });

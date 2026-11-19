@@ -267,7 +267,7 @@ export function rehydrate(text, vault = []) {
  */
 export function strayPlaceholders(text, vault = []) {
   const known = new Set([...vault.map((e) => e.placeholder), '[REDACTED]']);
-  const found = String(text).match(/[[A-Z][A-Z0-9_ ]*]/g) || [];
+  const found = String(text).match(/\[[A-Z][A-Z0-9_ ]*\]/g) || [];
   return [...new Set(found.filter((token) => !known.has(token)))];
 }
 
