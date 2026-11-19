@@ -119,10 +119,12 @@ The automated tests do not make a live Gemini call. Live behaviour of the on-dev
 
 ## Limits
 
-- On-device inference needs a current desktop Chrome with On-device AI turned on and the model downloaded (about 4.3 GB). On a mid-range GPU (RX 580) a structured note takes 15–40 s. On other browsers and on phones Skela uses the rule engine locally and the cloud for redacted work.
+- On-device inference needs a current desktop Chrome with On-device AI turned on and the model downloaded (about 4.3 GB). Measured through the interface on a mid-range GPU (RX 580): 20–45 s for the first call after opening, then 6–20 s to structure a note and 7–12 s for a brief. A full review drafted on the device takes about 150 s. On other browsers and on phones Skela uses the rule engine locally and the cloud for redacted work.
 - The on-device model is configured for English. Serbian notes are redacted and read by the rule engine, which knows Serbian site vocabulary.
 - Redaction is pattern-based with a model assist. It is strict about formats it knows and can miss a name that carries no title, label or company suffix and is not on your list. The vault table shows everything that was caught, so a miss is visible before sending.
 - Severity thresholds are triage hints with their source stated next to each finding (EN 1992-1-1 Table 7.1N for crack width; US OSHA 29 CFR 1926.501 and 1926.652 for height and depth). They are not a compliance verdict. The cloud review is a draft that an engineer must verify.
+- The on-device model is small. In live runs it changed a location name, graded the same defect differently between runs, named standards that do not exist in a locally drafted review, and wrote placeholders such as `[SITE_NAME]` that nothing stands behind. Skela answers each of these: threshold rules set the floor for every grade, invented placeholders are flagged and drawn as plain text, and a local review is labelled as a draft whose every citation must be verified.
+- Air-gap and `ONLY_ON_DEVICE` govern model calls. The App Check SDK still contacts Firebase to exchange its token; that request carries no note text.
 - The offline queue and the vault live in this browser's storage.
 
 ## Built during the submission period

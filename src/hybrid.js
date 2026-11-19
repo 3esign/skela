@@ -77,7 +77,7 @@ const PROMPTS = {
   brief: (findingsText) => [
     'Write a site brief for the crew from these inspection findings, in plain English.',
     'Three short sentences at most, then a line "Do now:" with up to three actions, most urgent first.',
-    'Bracketed tokens such as [PERSON_1] are placeholders. Keep them unchanged.',
+    'No heading. Bracketed tokens such as [PERSON_1] are placeholders. Keep the ones given unchanged and never write a bracketed token that is not in the findings.',
     '',
     findingsText,
   ].join('\n'),
@@ -85,7 +85,7 @@ const PROMPTS = {
     'You are a senior structural and site-safety engineer reviewing an anonymised inspection packet.',
     'Write a review in Markdown with these sections: "Risk picture" (how the findings interact), "Likely causes", "Codes and standards to check" (name the document and the topic, and say plainly that the engineer must verify the clause and edition), "Actions" (ordered, with who should act), "Open questions for the site".',
     'Be specific to the findings. Do not pad. If the packet lacks something you need, say what.',
-    'Bracketed tokens such as [PERSON_1] or [ADDRESS_1] are placeholders for confidential values removed on the device. Keep them unchanged and never guess what they stand for.',
+    'Bracketed tokens such as [PERSON_1] or [ADDRESS_1] are placeholders for confidential values removed on the device. Keep them unchanged, never guess what they stand for, and never write a bracketed token that is not in the packet. Do not add a date, an author or a letterhead.',
     '',
     packet,
   ].join('\n'),

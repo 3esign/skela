@@ -6,11 +6,11 @@
 // not hold: every status is a value below, every number is a sum over ledger rows.
 
 import fileConfig from '../config.js';
-import { redact, redactWithVault, rehydrate, inspectEgress, segments, KIND_LABEL } from './redact.js';
+import { redact, redactWithVault, rehydrate, inspectEgress, segments, strayPlaceholders, KIND_LABEL } from './redact.js';
 import { readNote, fromModel, CATEGORIES } from './rules.js';
 import { decide, buildPacket, DEFAULT_THRESHOLD, TASK_MODE } from './router.js';
 import { createLedger, DEFAULT_PRICE, formatUsd } from './telemetry.js';
-import { createHybrid, EgressBlocked } from './hybrid.js';
+import { createHybrid, EgressBlocked, DeviceUnavailable } from './hybrid.js';
 import { createDryRunSdk } from './dryrun.js';
 import { SAMPLES } from './samples.js';
 
@@ -179,7 +179,11 @@ async function inspect() {
         await state.hybrid.prepareDevice();
         state.devicePrepared = true;
       }
-      const out = await state.hybrid.structure(note);
+      // The Prompt API now and then fails a call with an unspecific error; one retry, still on device.
+      const out = await state.hybrid.structure(note).catch((error) => {
+        if (error instanceof DeviceUnavailable) throw error;
+        return state.hybrid.structure(note);
+      });
       record(out, 'structure');
       // Keep only names that really occur in the note, then redact again with them.
       const names = out.names.filter((n) => typeof n === 'string' && n.trim().length >= 3 && note.toLowerCase().includes(n.trim().toLowerCase()));
@@ -334,8 +338,9 @@ function renderStatus() {
   $('boundaryLabel').textContent = state.airGap ? 'sealed · air-gap' : state.crossing ? 'packet crossing' : 'browser boundary';
 }
 
-function renderRedacted(target, text) {
-  target.replaceChildren(...segments(text).map((part) => (part.type === 'text'
+function renderRedacted(target, text, stray = []) {
+  // A placeholder the model made up is drawn as plain text: nothing is protected behind it.
+  target.replaceChildren(...segments(text).map((part) => (part.type === 'text' || stray.includes(part.value)
     ? document.createTextNode(part.value)
     : el('mark', { class: 'bar', title: `${KIND_LABEL[part.kind] || 'redacted'}, kept on this device`, text: part.value }))));
 }
@@ -380,8 +385,9 @@ function renderDevice() {
   }
 
   if (r.brief) {
-    renderRedacted($('brief'), r.brief.text);
-    $('briefMeta').textContent = `Ran ${r.brief.source === 'cloud' ? 'in the cloud' : 'on this device'} · ${Math.round(r.brief.latencyMs)} ms · ${r.brief.mode}`;
+    renderRedacted($('brief'), r.brief.text, strayPlaceholders(r.brief.text, r.red.vault));
+    const stray = strayPlaceholders(r.brief.text, r.red.vault);
+    $('briefMeta').textContent = `Ran ${r.brief.source === 'cloud' ? 'in the cloud' : 'on this device'} · ${Math.round(r.brief.latencyMs)} ms · ${r.brief.mode}${stray.length ? ` · the model made up ${stray.join(', ')} — no vaulted value stands behind that` : ''}`;
   } else {
     $('brief').textContent = r.briefNote;
     $('briefMeta').textContent = state.busy === 'inspect' ? 'Writing…' : '';
@@ -461,7 +467,7 @@ function renderCloud() {
     } else {
       const text = $('rehydrate').checked ? rehydrate(view.out.text, view.vault) : view.out.text;
       renderMarkdown($('review'), text);
-      $('reviewMeta').textContent = `Ran ${view.out.source === 'cloud' ? 'in the cloud' : 'on this device'} · ${Math.round(view.out.latencyMs)} ms${view.draft ? ' · local draft' : ''}`;
+      $('reviewMeta').textContent = `Ran ${view.out.source === 'cloud' ? 'in the cloud' : 'on this device'} · ${Math.round(view.out.latencyMs)} ms${view.draft ? ' · local draft by a small on-device model: verify every code it names' : ''}${(() => { const stray = strayPlaceholders(view.out.text, view.vault); return stray.length ? ` · the model made up ${stray.length} placeholder(s) (${stray.slice(0, 4).join(', ')}${stray.length > 4 ? ', …' : ''}): no value stands behind them` : ''; })()}`;
     }
   }
 

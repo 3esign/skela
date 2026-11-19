@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { redact, rehydrate, inspectEgress, isValidJmbg, isValidPib, segments } from '../src/redact.js';
+import { redact, rehydrate, inspectEgress, isValidJmbg, isValidPib, segments, strayPlaceholders } from '../src/redact.js';
 import { SAMPLES, SAMPLE_SECRETS } from '../src/samples.js';
 
 const lexiconOf = (s) => (s.lexicon ? s.lexicon.split(',') : []);
@@ -125,4 +125,12 @@ test('model-written text is redacted with the vault of the note it came from', a
   assert.ok(!/Petrovi|060|222-3344/.test(out), out);
   assert.ok(out.includes('[PARTY_1]') && out.includes('[PHONE_1]') && out.includes('[REDACTED]'), out);
   assert.equal(inspectEgress(out, red.vault).ok, true);
+});
+
+test('placeholders a model made up are told apart from vaulted ones', () => {
+  const red = redact('Contractor: Mr. Jovan Petrović, phone 060/123-45-67.');
+  const real = red.vault[0].placeholder;
+  assert.deepEqual(strayPlaceholders(`Tell ${real} and [REDACTED].`, red.vault), [], 'vaulted tokens are not stray');
+  assert.deepEqual(strayPlaceholders(`Concerns at [SITE_NAME]; call [PERSON_9] and ${real}. [SITE_NAME] again.`, red.vault), ['[SITE_NAME]', '[PERSON_9]']);
+  assert.deepEqual(strayPlaceholders('Slab S3 [see photo] is cracked.', red.vault), [], 'ordinary bracketed prose is left alone');
 });

@@ -260,6 +260,17 @@ export function rehydrate(text, vault = []) {
   return out;
 }
 
+/**
+ * Bracketed upper-case tokens in model output that no vault entry stands behind, such as a
+ * "[SITE_NAME]" the model made up. They hide nothing and cannot be restored, so the interface
+ * must say so instead of drawing them as protected values.
+ */
+export function strayPlaceholders(text, vault = []) {
+  const known = new Set([...vault.map((e) => e.placeholder), '[REDACTED]']);
+  const found = String(text).match(/[[A-Z][A-Z0-9_ ]*]/g) || [];
+  return [...new Set(found.filter((token) => !known.has(token)))];
+}
+
 /** Split redacted text into plain and placeholder segments, for rendering. */
 export function segments(redactedText) {
   const parts = [];
