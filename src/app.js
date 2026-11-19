@@ -259,8 +259,11 @@ async function review({ localOnly = false, item = null } = {}) {
   try {
     const out = await state.hybrid.review(job.packet, job.vault, { lexicon: job.lexicon }, { localOnly });
     record(out, localOnly ? 'review draft' : item ? 'review (queued)' : 'review');
-    state.reviewView = { out, vault: job.vault, error: null, draft: localOnly };
-    delivered = true;
+    // PREFER_IN_CLOUD falls back to the on-device model when the cloud call fails. That answer
+    // is a local draft, not the review that was asked for, and a queued packet stays queued.
+    const fellBack = !localOnly && out.source !== 'cloud';
+    state.reviewView = { out, vault: job.vault, error: null, draft: localOnly || fellBack, fellBack };
+    delivered = !fellBack;
   } catch (error) {
     if (error instanceof EgressBlocked) ledger.counters.blockedEgress += 1;
     state.reviewView = { out: null, vault: job.vault, error: error.message };
@@ -467,7 +470,7 @@ function renderCloud() {
     } else {
       const text = $('rehydrate').checked ? rehydrate(view.out.text, view.vault) : view.out.text;
       renderMarkdown($('review'), text);
-      $('reviewMeta').textContent = `Ran ${view.out.source === 'cloud' ? 'in the cloud' : 'on this device'} · ${Math.round(view.out.latencyMs)} ms${view.draft ? ' · local draft by a small on-device model: verify every code it names' : ''}${(() => { const stray = strayPlaceholders(view.out.text, view.vault); return stray.length ? ` · the model made up ${stray.length} placeholder(s) (${stray.slice(0, 4).join(', ')}${stray.length > 4 ? ', …' : ''}): no value stands behind them` : ''; })()}`;
+      $('reviewMeta').textContent = `Ran ${view.out.source === 'cloud' ? 'in the cloud' : 'on this device'} · ${Math.round(view.out.latencyMs)} ms${view.fellBack ? ' · the cloud did not answer, so this is not the cloud review' : ''}${view.draft ? ' · local draft by a small on-device model: verify every code it names' : ''}${(() => { const stray = strayPlaceholders(view.out.text, view.vault); return stray.length ? ` · the model made up ${stray.length} placeholder(s) (${stray.slice(0, 4).join(', ')}${stray.length > 4 ? ', …' : ''}): no value stands behind them` : ''; })()}`;
     }
   }
 

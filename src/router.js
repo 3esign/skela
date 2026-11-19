@@ -69,7 +69,7 @@ export function decide({ findings, asksRegulation, text, online, cloudReady, air
 /** The exact text that crosses the browser boundary. Built only from redacted material. */
 export function buildPacket({ redactedText, findings, asksRegulation }) {
   const lines = [
-    'SITE INSPECTION PACKET (anonymised on device; bracketed tokens such as [PERSON_1] are placeholders, keep them unchanged)',
+    'SITE INSPECTION PACKET (anonymised on device; tokens in square brackets are placeholders, keep them unchanged)',
     '',
     'FINDINGS',
     ...findings.map((f) => `${f.id} [${f.severity}] [${f.category || 'general'}] ${f.text}`),

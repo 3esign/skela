@@ -110,6 +110,12 @@ node tools/probe-sdk.js 9222 http://localhost:5173/
 
 A probe of the real Firebase SDK with a placeholder configuration: the hybrid layer must build on it, a local-only task and an unredacted review must both be refused, and no request may leave the page.
 
+```
+node tools/cloud-rehearsal.js 9222 http://localhost:5173
+```
+
+A rehearsal of the cloud path with the real SDK and a live on-device model, in a Chrome that has Gemini Nano. The DevTools protocol pauses every request to the Firebase endpoints and answers it with canned text marked "REHEARSAL", so nothing reaches Google. 17 checks: the SDK's request body holds none of the sample's confidential values, the review returns and the originals are put back locally, a queued packet leaves by itself after reconnect, and when the cloud answers 503 the on-device fallback is labelled as a local draft and not as the cloud review.
+
 The automated tests do not make a live Gemini call. Live behaviour of the on-device and cloud models is verified by hand with a Firebase project.
 
 ## What the numbers mean
