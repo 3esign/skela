@@ -96,7 +96,7 @@ For a hosted copy, fill `config.js` at deploy time (see `config.example.js`) wit
 npm test
 ```
 
-44 unit tests, no dependencies (`node --test`). They include negative controls: the raw sample notes must fail the egress guard, an unredacted packet must never reach the SDK, a raw note must not reach the cloud even with no local model and a live network, and no local-only task may start in a browser without the Prompt API.
+47 unit tests, no dependencies (`node --test`). They include negative controls: the raw sample notes must fail the egress guard, an unredacted packet must never reach the SDK, a raw note must not reach the cloud even with no local model and a live network, and no local-only task may start in a browser without the Prompt API.
 
 ```
 node tools/e2e.js 9222
@@ -135,7 +135,7 @@ The automated tests do not make a live Gemini call. Live behaviour of the on-dev
 
 ## Built during the submission period
 
-Everything in this repository was written during the #BuildHybridAI 2026 submission period. No pre-existing code was reused. The only third-party code at runtime is the Firebase JavaScript SDK, loaded from Google's CDN. An AI coding assistant (Claude) was used to write it.
+Everything in this repository was written during the #BuildHybridAI 2026 submission period. No pre-existing code was reused. The only third-party code at runtime is the Firebase JavaScript SDK, loaded from Google's CDN. AI coding assistants (Claude and Gemini) were used to write and audit it.
 
 ## License
 

@@ -40,6 +40,7 @@ const DETECTORS = [
   { kind: 'ACCOUNT', via: 'pattern', re: /(?<![\p{L}\p{N}])[A-Z]{2}\d{2}(?:\s?[A-Z0-9]{4}){3,7}(?:\s?[A-Z0-9]{1,3})?(?![\p{L}\p{N}])/gu },
   { kind: 'ACCOUNT', via: 'pattern', re: /(?<![\p{N}\/-])\d{3}-\d{5,13}-\d{2}(?![\p{N}-])/gu },
   { kind: 'ID', via: 'pattern', re: /(?<![\p{N}])\d{13}(?![\p{N}])/gu, note: (v) => (isValidJmbg(v) ? 'checksum' : 'pattern') },
+  { kind: 'ID', via: 'pattern', re: /(?<![\p{N}-])\d{3}-\d{2}-\d{4}(?![\p{N}-])/gu },
   { kind: 'ID', via: 'label', group: 1, re: /(?:ID\s*card|passport|pasoš|pasos|lična\s+karta|licna\s+karta|l\.\s?k\.)\s*(?:no\.?|number|br\.?|broj)?\s*[:#]?\s*([A-Z0-9]{6,12})(?![\p{L}\p{N}])/giu },
   { kind: 'TAX', via: 'label', group: 1, re: /(?<![\p{L}])(?:PIB|VAT(?:\s+(?:no\.?|number|ID))?|Tax\s+ID|TIN|poreski\s+broj)\s*[:#.]?\s*((?:RS)?\d{8,12})(?![\p{N}])/giu },
   { kind: 'TAX', via: 'label', group: 1, re: /(?<![\p{L}])(?:MB|matični\s+broj|maticni\s+broj|mat\.\s?br\.|Reg(?:istration)?\.?\s*(?:no\.?|number))\s*[:#.]?\s*(\d{8})(?![\p{N}])/giu },
@@ -52,7 +53,9 @@ const DETECTORS = [
   { kind: 'PARCEL', via: 'pattern', re: new RegExp(`(?<![${L}])(?:k\\.\\s?p\\.|kat\\.\\s?parc\\.|kat\\.\\s?parcela|katastarska\\s+parcela|parcela|cadastral\\s+parcel|parcel)\\s*(?:br\\.?|no\\.?)?\\s*\\d+(?:\\/\\d+)?(?:\\s*,?\\s*K\\.\\s?O\\.\\s+\\p{Lu}[${L}]+(?:\\s\\p{Lu}[${L}]+)?)?`, 'giu') },
   { kind: 'PHONE', via: 'pattern', re: /(?<![\p{L}\p{N}])(?:\+|00)\d{1,3}[\s\-\/]?(?:\(?\d{1,4}\)?[\s\-\/]?){2,5}\d{2,4}(?![\p{N}])/gu },
   { kind: 'PHONE', via: 'pattern', re: /(?<![\p{L}\p{N}.,])0\d{1,2}[\s\/\-]\d{2,4}[\s\-]?\d{2,4}(?:[\s\-]?\d{2,4})?(?![\p{N}])/gu, keep: (v) => !/^\d{2}[-/.]\d{2}[-/.]\d{4}$/.test(v) },
+  { kind: 'PHONE', via: 'pattern', re: /(?<![\p{L}\p{N}-])(?:\(\d{3}\)\s*|\d{3}[-\s.])\d{3}[-\s.]\d{4}(?![\p{N}-])/gu },
   { kind: 'AMOUNT', via: 'pattern', re: new RegExp(`(?:€|\\$|£)\\s?${NUM}${SCALE}`, 'gu') },
+  { kind: 'AMOUNT', via: 'pattern', re: new RegExp(`(?<![${L}])(?:EUR|USD|GBP|CHF|RSD)\\s+${NUM}${SCALE}(?![${L}${N}])`, 'gu') },
   { kind: 'AMOUNT', via: 'pattern', re: new RegExp(`(?<![${L}${N}.,])${NUM}${SCALE}\\s?${CURRENCY}(?![${L}])`, 'gu') },
   { kind: 'AMOUNT', via: 'label', group: 1, re: new RegExp(`(?<![${L}])(?:${alt(AMOUNT_LABELS)})\\s*(?:[:=]|is|je|of)?\\s*(${NUM}${SCALE})(?![${L}${N}])`, 'giu') },
   { kind: 'COMPANY', via: 'pattern', re: new RegExp(`(?<![${L}])\\p{Lu}[${L}${N}&.-]*(?:\\s+[\\p{Lu}${N}][${L}${N}&.-]*){0,3}\\s+${COMPANY_SUFFIX}(?![${L}])`, 'gu') },
@@ -218,7 +221,8 @@ export function redact(text, options = {}) {
   let out = '';
   let cursor = 0;
   for (const h of hits) {
-    out += text.slice(cursor, h.start) + placeholderFor(h);
+    const tag = placeholderFor(h);
+    out += text.slice(cursor, h.start) + (options.placeholder || tag);
     cursor = h.end;
   }
   out += text.slice(cursor);
@@ -306,7 +310,5 @@ export function redactWithVault(text, vault = [], options = {}) {
     const one = `(?:${aliases.map(termBody).join('|')})[${L}]{0,3}`;
     out = out.replace(new RegExp(`(?<![${L}${N}])${one}(?:\\s+${one})*${NOT_WORD_AFTER}`, 'giu'), e.placeholder);
   }
-  const rest = redact(out, options);
-  for (const e of rest.vault) for (const form of e.forms) out = out.split(form).join('[REDACTED]');
-  return out;
+  return redact(out, { ...options, placeholder: '[REDACTED]' }).text;
 }

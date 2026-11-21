@@ -206,6 +206,7 @@ async function inspect() {
   ledger.counters.protectedFields += red.total;
   state.run = { note, lexicon, red, findings, asksRegulation: read.asksRegulation, reader, readerNote, brief: null, briefNote: '' };
   state.preview = null;
+  state.reviewView = null;
   recompute();
   render();
 
@@ -284,8 +285,10 @@ function sendOrQueue() {
     return;
   }
   if (!state.online) {
-    state.queue.push({ id: `${Date.now()}`, at: Date.now(), packet: r.packet, vault: r.red.vault, lexicon: r.lexicon });
-    saveQueue();
+    if (!state.queue.some((q) => q.packet === r.packet)) {
+      state.queue.push({ id: `${Date.now()}`, at: Date.now(), packet: r.packet, vault: r.red.vault, lexicon: r.lexicon });
+      saveQueue();
+    }
     render();
     return;
   }
@@ -397,10 +400,10 @@ function renderDevice() {
   }
 }
 
-function renderMarkdown(target, text) {
+function renderMarkdown(target, text, stray = []) {
   const inline = (line) => line.split(/(\*\*[^*]+\*\*|\[[A-Z]+_\d+\]|\[REDACTED\])/g).filter(Boolean).map((piece) => {
     if (piece.startsWith('**')) return el('strong', { text: piece.slice(2, -2) });
-    if (/^\[[A-Z]+(_\d+)?\]$/.test(piece)) return el('mark', { class: 'bar', text: piece });
+    if (/^\[[A-Z]+(_\d+)?\]$/.test(piece) && !stray.includes(piece)) return el('mark', { class: 'bar', text: piece });
     return document.createTextNode(piece);
   });
   const nodes = [];
@@ -469,8 +472,9 @@ function renderCloud() {
       $('reviewMeta').textContent = '';
     } else {
       const text = $('rehydrate').checked ? rehydrate(view.out.text, view.vault) : view.out.text;
-      renderMarkdown($('review'), text);
-      $('reviewMeta').textContent = `Ran ${view.out.source === 'cloud' ? 'in the cloud' : 'on this device'} · ${Math.round(view.out.latencyMs)} ms${view.fellBack ? ' · the cloud did not answer, so this is not the cloud review' : ''}${view.draft ? ' · local draft by a small on-device model: verify every code it names' : ''}${(() => { const stray = strayPlaceholders(view.out.text, view.vault); return stray.length ? ` · the model made up ${stray.length} placeholder(s) (${stray.slice(0, 4).join(', ')}${stray.length > 4 ? ', …' : ''}): no value stands behind them` : ''; })()}`;
+      const stray = strayPlaceholders(view.out.text, view.vault);
+      renderMarkdown($('review'), text, stray);
+      $('reviewMeta').textContent = `Ran ${view.out.source === 'cloud' ? 'in the cloud' : 'on this device'} · ${Math.round(view.out.latencyMs)} ms${view.fellBack ? ' · the cloud did not answer, so this is not the cloud review' : ''}${view.draft ? ' · local draft by a small on-device model: verify every code it names' : ''}${stray.length ? ` · the model made up ${stray.length} placeholder(s) (${stray.slice(0, 4).join(', ')}${stray.length > 4 ? ', …' : ''}): no value stands behind them` : ''}`;
     }
   }
 
@@ -638,6 +642,7 @@ function init() {
       if (state.busy === 'inspect') return;
       const note = $('note').value.trim();
       state.run = null;
+      state.reviewView = null;
       state.preview = note ? redact(note, { lexicon: lexiconOf($('lexicon').value) }) : null;
       render();
     }, 120);

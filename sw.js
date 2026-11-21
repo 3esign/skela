@@ -4,7 +4,7 @@
 // Firebase SDK modules on gstatic are versioned and immutable: cache first.
 // Nothing else is intercepted, so inference requests always go straight to the network.
 
-const CACHE = 'skela-v7';
+const CACHE = 'skela-v8';
 const SHELL = [
   './', './index.html', './styles.css', './config.js', './icon.svg', './manifest.webmanifest',
   './src/app.js', './src/redact.js', './src/rules.js', './src/router.js', './src/telemetry.js',

@@ -135,3 +135,23 @@ test('placeholders a model made up are told apart from vaulted ones', () => {
   assert.deepEqual(strayPlaceholders('Slab S3 [see photo] is cracked.', red.vault), [], 'ordinary bracketed prose is left alone');
   assert.deepEqual(strayPlaceholders('Fix the crack in [F3 Slab S3] and the rail on [F1 North scaffold].', red.vault), [], 'a bracketed finding reference ending in capitals is not a placeholder');
 });
+
+test('US phones, SSN and currency-before-number are redacted without touching codes or dates', () => {
+  const text = 'Call (415) 555-0192 or 415-555-0199, SSN 123-45-6789, quote USD 50,000 and EUR 48,500. Check EN 1992-1-1 on 2026-11-19 for 0.4 mm crack.';
+  const out = redact(text);
+  for (const secret of ['415', '555-0192', '555-0199', '123-45-6789', '50,000', '48,500']) {
+    assert.ok(!out.text.includes(secret), `leaked ${secret}: ${out.text}`);
+  }
+  for (const keep of ['EN 1992-1-1', '2026-11-19', '0.4 mm']) {
+    assert.ok(out.text.includes(keep), `corrupted ${keep}: ${out.text}`);
+  }
+});
+
+test('redactWithVault replaces only the newly matched span, not unrelated measurements', async () => {
+  const { redactWithVault } = await import('../src/redact.js');
+  const red = redact('Contractor: Mr. Jovan Petrović.');
+  const out = redactWithVault('Slab S3 spalling 30 cm reported by Jovan Petrović; fee: 30.', red.vault);
+  assert.ok(out.includes('30 cm'), `measurement corrupted: ${out}`);
+  assert.ok(out.includes('[PARTY_1]'), out);
+  assert.ok(out.includes('fee: [REDACTED]'), out);
+});
