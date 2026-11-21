@@ -1,9 +1,15 @@
-// Skela — deployment configuration.
-// Committed empty on purpose. With `null` the app opens unconnected and you can paste the same
-// values into Settings, where they are kept in this browser only.
-//
-// For a hosted copy, fill this in at deploy time and do not commit the filled file
-// (`git update-index --skip-worktree config.js` keeps Git from noticing your local edit).
-// See config.example.js for the shape.
-
-export default null;
+// Skela — deployment configuration of the hosted copy (branch gh-pages only; main keeps this empty).
+// These are the public web identifiers of the Firebase project. The API is protected by App Check,
+// which is enforced on Firebase AI Logic. No debug token is stored here.
+export default {
+  firebase: {
+    apiKey: 'AIzaSyCMExs3vzIsXfSHUSQnQidSpnAvLPm4tHU',
+    authDomain: 'aixc-ea17d.firebaseapp.com',
+    projectId: 'aixc-ea17d',
+    storageBucket: 'aixc-ea17d.firebasestorage.app',
+    messagingSenderId: '945072462600',
+    appId: '1:945072462600:web:eb75a811a89ffba7862abd',
+  },
+  appCheck: { provider: 'debug' },
+  cloudModel: '',
+};
